@@ -26,7 +26,7 @@ Una aplicación PS4 independiente, instalable como PKG, para crear y administrar
 | Fijar objetivo (R3) | Clic central |
 | Menú | Esc |
 
-El botón lateral del mouse será una entrada alternativa para L2 (por defecto Button 4); el usuario podrá cambiarlo. El perfil debe seguir siendo editable.
+L2 queda asignado únicamente a Ctrl en el perfil predeterminado. Si el usuario conecta otro mouse, podrá asignar manualmente sus botones adicionales desde el editor. No asumir que el mouse dispone de botones laterales.
 
 ## Editar perfil
 - Tabla de acciones lógicas del mando y acciones semánticas del juego.
