@@ -282,14 +282,14 @@ static void DrawKeyboardTest(Scene2D &s) {
     const Color cyan={45,205,220}, green={70,220,155}, orange={245,175,75};
     s.Rect(140,640,1640,300,panel); s.Rect(140,640,1640,7,cyan);
     Text(s,180,680,"INPUT LAB KEYBOARD AND MOUSE",3,white);
-    Text(s,180,740,gKeyboardReady ? "KEYBOARD CONNECTED" : "KEYBOARD NOT DETECTED",2,gKeyboardReady ? green : orange);
+    Text(s,180,740,"INPUT DISABLED - STABILITY TEST",2,orange);
     Text(s,850,740,"KEY EVENTS",2,muted);
     char number[24]; snprintf(number,sizeof(number),"%d",gKeyCount); Text(s,1130,740,number,2,white);
     Text(s,180,795,"SEARCH TEST TYPE HERE",2,muted);
     s.Rect(180,835,940,62,panel2); Text(s,200,852,gSearchText,2,white);
     Text(s,1260,795,"LAST KEY CODE",2,muted);
     snprintf(number,sizeof(number),"%d",gLastKey); Text(s,1260,850,number,3,cyan);
-    Text(s,180,920,"MOUSE TEST PAUSED - API NOT VERIFIED",2,gMouseConnected ? green : orange);
+    Text(s,180,920,"MOUSE DISABLED - ABI NOT VERIFIED",2,orange);
     Text(s,850,920,"LEFT",2,muted);
     snprintf(number,sizeof(number),"%d",gMouseLeftCount); Text(s,960,920,number,2,white);
     Text(s,1080,920,"RIGHT",2,muted);
@@ -322,7 +322,7 @@ static void DrawInterface(Scene2D &s) {
 
 int main(void) {
     gLog = fopen("/data/PS4CloudBrowser.log", "w");
-    Log("APP_START", 5);
+    Log("APP_START", 6);
 
     Scene2D scene(SCREEN_W, SCREEN_H);
     if (!scene.Init()) {
@@ -347,23 +347,18 @@ int main(void) {
         for (;;) sceKernelUsleep(1000000);
     }
 
-    // Input startup is deliberately delayed until after the first two confirmed frames.
-    // Mouse API is disabled in this safety build until its ABI is verified.
-    int userId = -1;
-    int userRc = sceUserServiceInitialize(nullptr); Log("USER_SERVICE_INIT", userRc);
-    userRc = sceUserServiceGetInitialUser(&userId); Log("INITIAL_USER", userRc);
-    int keyboardRc = sceKeyboardInit(); Log("KEYBOARD_INIT", keyboardRc);
-    if (keyboardRc >= 0 && userRc >= 0) {
-        gKeyboardHandle = sceKeyboardOpen(userId, 0, 0, nullptr);
-        Log("KEYBOARD_OPEN", gKeyboardHandle); gKeyboardReady = gKeyboardHandle >= 0;
-    }
-    Log("MOUSE_DISABLED_UNTIL_ABI_VERIFIED", 0);
-
+    // v0.5.2 isolates the renderer: no user-service, keyboard, or mouse APIs.
+    // The console previously reached the interface and then crashed after input startup.
+    Log("INPUT_APIS_DISABLED_FOR_STABILITY_TEST", 0);
     Log("GRAPHICS_TEST_PASSED", 0);
     int frameId = 2;
     for (;;) {
-        PollKeyboard(); PollMouse(); scene.Swap(); DrawInterface(scene);
-        if (!scene.Flip(frameId++)) sceKernelUsleep(100000);
+        scene.Swap();
+        DrawInterface(scene);
+        if (!scene.Flip(frameId++)) {
+            Log("FRAME_FLIP_FAILED", frameId);
+            sceKernelUsleep(100000);
+        }
         sceKernelUsleep(16000);
     }
     return 0;
