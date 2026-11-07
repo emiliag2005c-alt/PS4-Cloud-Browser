@@ -276,23 +276,6 @@ static void PollMouse() {
     if ((gMouseButtons & 2u) && !(gPreviousMouseButtons & 2u)) ++gMouseRightCount;
     gPreviousMouseButtons = gMouseButtons;
 }
-static void PollKeyboard() {
-    if (!gKeyboardReady || gKeyboardHandle < 0) return;
-    OrbisKeyboardData data;
-    memset(&data, 0, sizeof(data));
-    int rc = sceKeyboardReadState(gKeyboardHandle, &data);
-    if (rc < 0) return;
-    for (int i = 0; i < data.nkeys && i < 32; ++i) {
-        int key = data.keycodes[i];
-        gLastKey = key;
-        char c = KeyToChar(key);
-        if (c == '\\b') { size_t n = strlen(gSearchText); if (n) gSearchText[n - 1] = 0; }
-        else if (c && c != '\\n' && strlen(gSearchText) < sizeof(gSearchText) - 1) {
-            size_t n = strlen(gSearchText); gSearchText[n] = c; gSearchText[n + 1] = 0;
-        }
-        ++gKeyCount;
-    }
-}
 static void DrawKeyboardTest(Scene2D &s) {
     const Color panel={20,29,47}, panel2={25,38,59};
     const Color white={235,242,255}, muted={135,155,180};
