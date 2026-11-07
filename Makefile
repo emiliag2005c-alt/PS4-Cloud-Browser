@@ -16,7 +16,7 @@ CC          := clang
 CXX         := clang++
 LD          := ld.lld
 
-CORE_LIBS   := -lc -lkernel -lc++ -lSceLibcInternal
+CORE_LIBS   := -lc -lkernel -lc++ -lSceLibcInternal -lSceFios2
 ALL_STUBS   := $(sort $(patsubst $(TOOLCHAIN)/lib/lib%.so,-l%,$(wildcard $(TOOLCHAIN)/lib/lib*.so)) \
                       $(patsubst $(TOOLCHAIN)/lib/lib%.a,-l%,$(wildcard $(TOOLCHAIN)/lib/lib*.a)))
 EXTRA_LIBS  := $(filter-out $(CORE_LIBS),$(ALL_STUBS))
@@ -51,7 +51,8 @@ $(INTDIR)/%.o: $(SRCDIR)/%.s | $(INTDIR)
 
 eboot.bin: $(OBJS)
 	$(LD) $(OBJS) -o $(OUT_ELF) $(LDFLAGS)
-	$(PKGTOOLS)/create-fself -in=$(OUT_ELF) -out=$(OUT_OELF) --eboot "eboot.bin" --paid 0x3100000000000001
+	$(PKGTOOLS)/create-fself -in=$(OUT_ELF) -out=$(OUT_OELF) --eboot "eboot.bin" --paid 0x3800000000000011
+	@test -s $@
 
 sce_sys/icon0.png: tools/make_icon.py
 	python3 tools/make_icon.py $@
@@ -70,18 +71,29 @@ sce_sys/param.sfo: Makefile
 	$(PKGTOOLS)/PkgTool.Core sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value '$(TITLE_ID)'
 	$(PKGTOOLS)/PkgTool.Core sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value '$(VERSION)'
 
-pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png
-	python3 tools/make_gp4.py --out $@ --content-id $(CONTENT_ID) $^
+sce_sys/about/right.prx:
+	mkdir -p sce_sys/about
+	@right_file="$$(find "$(TOOLCHAIN)/samples" -path '*/sce_sys/about/right.prx' -print -quit)"; \
+	if [ -z "$$right_file" ]; then echo "OpenOrbis right.prx not found"; exit 1; fi; \
+	cp "$$right_file" "$@"
+
+sce_module/libc.prx:
+	mkdir -p sce_module
+	cp "$(TOOLCHAIN)/bin/data/modules/libc.prx" "$@"
+
+sce_module/libSceFios2.prx:
+	mkdir -p sce_module
+	cp "$(TOOLCHAIN)/bin/data/modules/libSceFios2.prx" "$@"
+
+pkg.gp4: eboot.bin sce_sys/about/right.prx sce_sys/param.sfo sce_sys/icon0.png sce_module/libc.prx sce_module/libSceFios2.prx
+	$(PKGTOOLS)/create-gp4 -out $@ --content-id=$(CONTENT_ID) --files "$^"
 
 $(CONTENT_ID).pkg: pkg.gp4
-	@set +e; $(PKGTOOLS)/PkgTool.Core pkg_build $< .; status=$?; set -e; \
-	echo "PkgTool.Core pkg_build exit code: $status"; \
-	find . -maxdepth 1 -type f -name '*.pkg' -printf '%f (%s bytes)\\n' || true; \
-	if [ $status -ne 0 ]; then echo "PKG builder failed; see diagnostics above."; exit $status; fi
+	$(PKGTOOLS)/PkgTool.Core pkg_build $< .
 	@test -s "$@"
 	$(PKGTOOLS)/PkgTool.Core pkg_validate "$@"
 
 clean:
-	rm -rf $(INTDIR) eboot.bin pkg.gp4 sce_sys/param.sfo sce_sys/icon0.png *.pkg
+	rm -rf $(INTDIR) eboot.bin pkg.gp4 sce_sys/param.sfo sce_sys/icon0.png sce_sys/about sce_module *.pkg
 
 .PHONY: all clean
