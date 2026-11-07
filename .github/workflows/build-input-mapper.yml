@@ -1,0 +1,75 @@
+name: Build PS4 Input Mapper
+
+on:
+  push:
+    branches: [input-mapper/configurable-pkg]
+    paths:
+      - "input-mapper/app/**"
+      - ".github/workflows/build-input-mapper.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make curl libicu-dev clang lld python3
+      - name: Install libssl1.1 required by PkgTool.Core
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://security.ubuntu.com/ubuntu/pool/main/o/openssl/"
+          package="$(curl -fsSL "$base" | grep -oE 'libssl1\\.1_1\\.1\\.1f-[0-9a-z.~+]+_amd64\\.deb' | sort -Vu | tail -n 1)"
+          test -n "$package"
+          curl -fL "$base$package" -o /tmp/libssl1.1.deb
+          sudo dpkg -i /tmp/libssl1.1.deb
+      - name: Download OpenOrbis PS4 Toolchain v0.5.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5.4/toolchain-llvm-18.tar.gz -o /tmp/openorbis-toolchain.tar.gz
+          mkdir -p "$RUNNER_TEMP/openorbis"
+          tar -xzf /tmp/openorbis-toolchain.tar.gz -C "$RUNNER_TEMP/openorbis"
+          link_file="$(find "$RUNNER_TEMP/openorbis" -type f -name link.x -print -quit)"
+          test -n "$link_file"
+          toolchain_root="$(dirname "$link_file")"
+          echo "OO_PS4_TOOLCHAIN=$toolchain_root" >> "$GITHUB_ENV"
+          curl -fL https://github.com/OpenOrbis/create-gp4/releases/latest/download/binaries.tar.gz -o /tmp/create-gp4.tar.gz
+          mkdir -p /tmp/create-gp4
+          tar -xzf /tmp/create-gp4.tar.gz -C /tmp/create-gp4
+          install -m 0755 /tmp/create-gp4/bin/linux/create-gp4 "$toolchain_root/bin/linux/create-gp4"
+          curl -fL https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/archive/refs/tags/v0.5.4.tar.gz -o /tmp/openorbis-source.tar.gz
+          mkdir -p /tmp/openorbis-source
+          tar -xzf /tmp/openorbis-source.tar.gz -C /tmp/openorbis-source --strip-components=1
+          modules="/tmp/openorbis-source/src/modules"
+          export OO_PS4_TOOLCHAIN="$toolchain_root"
+          make -C "$modules/libc"
+          make -C "$modules/libSceFios2"
+          make -C "$modules/right"
+          mkdir -p "$toolchain_root/ci_modules"
+          cp "$modules/libc/libc.prx" "$toolchain_root/ci_modules/libc.prx"
+          cp "$modules/libSceFios2/libSceFios2.prx" "$toolchain_root/ci_modules/libSceFios2.prx"
+          cp "$modules/right/right.sprx" "$toolchain_root/ci_modules/right.sprx"
+      - name: Build and validate Input Mapper PKG
+        run: |
+          set -euo pipefail
+          make -C input-mapper/app
+          test -s input-mapper/app/eboot.bin
+          test -s input-mapper/app/IV0000-PIM000001_00-PS4INPUTMAPPER0.pkg
+          "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate input-mapper/app/IV0000-PIM000001_00-PS4INPUTMAPPER0.pkg
+          sha256sum input-mapper/app/eboot.bin input-mapper/app/IV0000-PIM000001_00-PS4INPUTMAPPER0.pkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PS4-Input-Mapper-editor-shell
+          path: |
+            input-mapper/app/IV0000-PIM000001_00-PS4INPUTMAPPER0.pkg
+            input-mapper/app/eboot.bin
+            input-mapper/app/build/ps4_input_mapper.elf
+          if-no-files-found: error
+          retention-days: 30
