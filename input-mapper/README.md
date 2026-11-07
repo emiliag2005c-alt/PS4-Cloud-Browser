@@ -1,61 +1,49 @@
-# PS4 Universal Input Mapper — Prototype 0.2
+# PS4 Input Mapper
 
-Experimental input-translation core for PS4 homebrew.
+Proyecto separado del PS4 Cloud Browser para crear y administrar perfiles de teclado y mouse.
 
-## What this prototype does
+## Objetivo de la primera versión
 
-- Converts a normalized keyboard/mouse state into a **platform-neutral DualShock-style report**.
-- WASD controls the left stick.
-- Mouse movement controls a decaying right-stick aim value.
-- Mouse buttons and keyboard keys map to logical controller buttons/triggers.
-- Includes a selectable **God of War Ragnarök** profile: left click = R1 (light attack), right click = R2 (heavy/charged attack).
-- Includes a host-side unit test that can be compiled with a normal C compiler.
+- Aplicación PS4 independiente en formato PKG.
+- Perfil inicial editable: **PC estándar — teclado y mouse**.
+- Crear, duplicar, renombrar, seleccionar, importar, exportar y borrar perfiles.
+- Editor de asignaciones con captura de tecla/botón y detección de conflictos.
+- Ajustes independientes de movimiento y cámara.
+- Prueba visual de entradas y guardado persistente.
 
-## What it does not do yet
+## Perfil inicial
 
-This is **not an installable PS4 mapper** and does not inject input into games. It deliberately does not call undocumented PS4 input APIs, patch game processes, or pretend that a normal homebrew application can create a system-wide virtual DualShock 4.
+| Acción | Entrada |
+|---|---|
+| Movimiento | WASD |
+| Cámara | Mouse |
+| Ataque ligero (R1) | Clic izquierdo |
+| Ataque pesado (R2) | Clic derecho |
+| Bloquear con escudo (L1) | Q |
+| Apuntar / lanzar hacha (L2) | Ctrl |
+| Esquivar (Cross) | Espacio |
+| Interactuar | E |
+| Correr (L3) | Shift |
+| Fijar objetivo (R3) | Clic central |
+| Menú | Esc |
 
-The remaining platform work is substantial:
+No se presupone que el mouse tenga botones laterales. El editor permitirá asignarlos manualmente si el dispositivo los ofrece.
 
-1. Identify a supported way to read USB HID keyboard and mouse reports on the target firmware.
-2. Identify a supported, safe input-injection route visible to games.
-3. Verify whether GoldHEN plugin facilities can provide the required per-title integration without destabilizing the system.
-4. Only then connect this core to PS4-specific adapters and package it.
+## Estado técnico honesto
 
-A universal solution may not be possible for every title. Games with native keyboard/mouse support should continue using their native path; this project targets games that only read a controller.
+El repositorio contiene el formato JSON, el perfil inicial y un core portable de traducción con pruebas de escritorio. **Todavía no contiene un editor PS4 instalable ni un sistema verificado de inyección de mando en juegos.** La aplicación de configuración y el runtime de entrada son componentes separados.
 
-## Build and test the portable core
+La compatibilidad universal con juegos que solo aceptan mando depende de encontrar y validar una ruta segura de entrada en PS4/GoldHEN. No se afirmará que existe hasta probarla en hardware real.
 
-From this directory:
+## Pruebas locales
 
 ```sh
-cc -std=c11 -Wall -Wextra -Werror -Iinclude src/mapper.c tests/test_mapper.c -o mapper_test
+cc -std=c11 -Wall -Wextra -Werror -Iinput-mapper/include \
+  input-mapper/src/mapper.c input-mapper/tests/test_mapper.c -o mapper_test
 ./mapper_test
+python3 input-mapper/tests/test_profile.py
 ```
 
-## Current mapping
+## Diseño del editor
 
-| Input | Logical controller output |
-|---|---|
-| W / A / S / D | Left stick |
-| Mouse movement | Right stick / aim |
-| Left mouse button | R2 |
-| Right mouse button | L2 |
-| Middle mouse button | R3 |
-| Space | Cross |
-| R | Square |
-| E | Triangle |
-| Q | L1 |
-| F | Circle |
-| Left Shift | L3 |
-
-The mapping is a starting default, not a claim that every game's controls are identical.
-
-## Safety / stability rule
-
-The mapper core stays separate from the existing Cloud Browser build and source tree. No kernel patching, syscall patching, or undocumented ABI calls are added to the browser app as part of this prototype.
-
-
-## God of War Ragnarök profile
-
-Call `mapper_step_profile(..., MAP_PROFILE_GOW_RAGNAROK)` to select this profile. The left mouse button holds logical R1; the right mouse button holds logical R2. Releasing the mouse button releases the corresponding logical action. This profile is only a mapping inside the portable core: it still does not read a physical mouse or inject controller input into a running PS4 game.
+Consulta [PROFILE_EDITOR.md](PROFILE_EDITOR.md) y [PROFILE_FORMAT.md](PROFILE_FORMAT.md).
