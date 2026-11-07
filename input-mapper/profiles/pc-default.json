@@ -5,32 +5,83 @@
   "input_mode": "keyboard_mouse",
   "look": {
     "device": "mouse",
-    "sensitivity_x": 2.0,
-    "sensitivity_y": 2.0,
+    "sensitivity_x": 2,
+    "sensitivity_y": 2,
     "invert_y": false,
-    "smoothing": 0.0
+    "smoothing": 0
   },
   "movement": {
-    "up": {"device": "keyboard", "code": "W"},
-    "left": {"device": "keyboard", "code": "A"},
-    "down": {"device": "keyboard", "code": "S"},
-    "right": {"device": "keyboard", "code": "D"}
+    "up": {
+      "device": "keyboard",
+      "code": "W"
+    },
+    "left": {
+      "device": "keyboard",
+      "code": "A"
+    },
+    "down": {
+      "device": "keyboard",
+      "code": "S"
+    },
+    "right": {
+      "device": "keyboard",
+      "code": "D"
+    }
   },
   "bindings": [
-    {"action": "R1", "label": "Ataque ligero", "device": "mouse", "code": "LEFT"},
-    {"action": "R2", "label": "Ataque pesado", "device": "mouse", "code": "RIGHT"},
-    {"action": "L1", "label": "Bloquear con escudo", "device": "keyboard", "code": "Q"},
+    {
+      "action": "R1",
+      "label": "Ataque ligero",
+      "device": "mouse",
+      "code": "LEFT"
+    },
+    {
+      "action": "R2",
+      "label": "Ataque pesado",
+      "device": "mouse",
+      "code": "RIGHT"
+    },
+    {
+      "action": "L1",
+      "label": "Bloquear con escudo",
+      "device": "keyboard",
+      "code": "Q"
+    },
     {
       "action": "L2",
       "label": "Apuntar / lanzar hacha",
       "device": "keyboard",
-      "code": "CTRL",
-      "alternates": [{"device": "mouse", "code": "BUTTON4"}]
+      "code": "CTRL"
     },
-    {"action": "CROSS", "label": "Esquivar", "device": "keyboard", "code": "SPACE"},
-    {"action": "INTERACT", "label": "Interactuar", "device": "keyboard", "code": "E"},
-    {"action": "L3", "label": "Correr", "device": "keyboard", "code": "SHIFT"},
-    {"action": "R3", "label": "Fijar objetivo", "device": "mouse", "code": "MIDDLE"},
-    {"action": "OPTIONS", "label": "Menú", "device": "keyboard", "code": "ESC"}
+    {
+      "action": "CROSS",
+      "label": "Esquivar",
+      "device": "keyboard",
+      "code": "SPACE"
+    },
+    {
+      "action": "INTERACT",
+      "label": "Interactuar",
+      "device": "keyboard",
+      "code": "E"
+    },
+    {
+      "action": "L3",
+      "label": "Correr",
+      "device": "keyboard",
+      "code": "SHIFT"
+    },
+    {
+      "action": "R3",
+      "label": "Fijar objetivo",
+      "device": "mouse",
+      "code": "MIDDLE"
+    },
+    {
+      "action": "OPTIONS",
+      "label": "Menú",
+      "device": "keyboard",
+      "code": "ESC"
+    }
   ]
 }
