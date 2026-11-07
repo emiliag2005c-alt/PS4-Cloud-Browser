@@ -33,6 +33,7 @@ static bool gKeyboardReady = false;
 static char gSearchText[64] = "";
 static int gKeyCount = 0;
 static int gLastKey = 0;
+static bool gKeyDown[256] = {};
 static int gMouseHandle = -1;
 static bool gMouseReady = false;
 static bool gMouseConnected = false;
@@ -201,14 +202,65 @@ static void Text(Scene2D &s, int x, int y, const char *str, int scale, Color col
 }
 
 
-static char KeyToChar(int key) {
-    if (key >= 4 && key <= 29) return (char)('A' + key - 4);
-    if (key >= 30 && key <= 38) return (char)('1' + key - 30);
-    if (key == 39) return '0';
-    if (key == ORBIS_KEYBOARD_KEY_BACKSPACE) return '\\b';
-    if (key == ORBIS_KEYBOARD_KEY_RETURN) return '\\n';
-    if (key == 44) return ' ';
-    return 0;
+static char KeyToChar(int key, bool shift, bool caps, bool numlock) {
+    if (key >= 4 && key <= 29) {
+        char c = (char)('a' + key - 4);
+        return (shift != caps) ? (char)(c - 'a' + 'A') : c;
+    }
+    if (key >= 30 && key <= 39) {
+        static const char shifted[] = ")!@#$%^&*(";
+        int digit = key == 39 ? 0 : key - 29;
+        return shift ? shifted[digit] : (char)('0' + digit);
+    }
+    if (key >= 89 && key <= 98 && numlock) return key == 98 ? '0' : (char)('1' + key - 89);
+    switch (key) {
+        case 44: return ' ';
+        case 45: return shift ? '_' : '-';
+        case 46: return shift ? '+' : '=';
+        case 47: return shift ? '{' : '[';
+        case 48: return shift ? '}' : ']';
+        case 49: return shift ? '|' : '\\';
+        case 51: return shift ? ':' : ';';
+        case 52: return shift ? '"' : '\'';
+        case 53: return shift ? '~' : '`';
+        case 54: return shift ? '<' : ',';
+        case 55: return shift ? '>' : '.';
+        case 56: return shift ? '?' : '/';
+        case 84: return '/';
+        case 85: return '*';
+        case 86: return '-';
+        case 87: return '+';
+        case 99: return numlock ? '.' : 0;
+        default: return 0;
+    }
+}
+static void PollKeyboard() {
+    if (!gKeyboardReady || gKeyboardHandle < 0) return;
+    OrbisKeyboardData data;
+    memset(&data, 0, sizeof(data));
+    int rc = sceKeyboardReadState(gKeyboardHandle, &data);
+    if (rc < 0) return;
+    bool now[256] = {};
+    for (int i = 0; i < data.nkeys && i < 32; ++i) {
+        int key = data.keycodes[i];
+        if (key > 0 && key < 256) now[key] = true;
+    }
+    bool shift = (data.mods & (ORBIS_KEYBOARD_MOD_LEFT_SHIFT | ORBIS_KEYBOARD_MOD_RIGHT_SHIFT)) != 0;
+    bool caps = (data.locks & ORBIS_KEYBOARD_CAPS_LOCK) != 0;
+    bool numlock = (data.locks & ORBIS_KEYBOARD_NUM_LOCK) != 0;
+    for (int key = 1; key < 256; ++key) {
+        if (now[key] && !gKeyDown[key]) {
+            gLastKey = key;
+            char c = KeyToChar(key, shift, caps, numlock);
+            if (key == ORBIS_KEYBOARD_KEY_BACKSPACE) {
+                size_t n = strlen(gSearchText); if (n) gSearchText[n - 1] = 0;
+            } else if (key != ORBIS_KEYBOARD_KEY_RETURN && c && strlen(gSearchText) < sizeof(gSearchText) - 1) {
+                size_t n = strlen(gSearchText); gSearchText[n] = c; gSearchText[n + 1] = 0;
+            }
+            ++gKeyCount;
+        }
+        gKeyDown[key] = now[key];
+    }
 }
 static void PollMouse() {
     if (!gMouseReady || gMouseHandle < 0) return;
