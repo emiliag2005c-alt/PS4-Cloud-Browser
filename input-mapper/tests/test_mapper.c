@@ -56,6 +56,22 @@ int main(void)
     mapper_step(&state, &config, &input, &output);
     assert(output.right_y == -20);
 
+    /* God of War Ragnarök profile: left click is R1, right click is R2. */
+    mapper_reset(&state);
+    memset(&input, 0, sizeof(input));
+    input.mouse_left = true;
+    input.mouse_right = true;
+    mapper_step_profile(&state, &config, &input, &output, MAP_PROFILE_GOW_RAGNAROK);
+    assert((output.buttons & MAP_BTN_R1) != 0);
+    assert((output.triggers & MAP_TRIGGER_R2) != 0);
+    assert((output.triggers & MAP_TRIGGER_L2) == 0);
+
+    /* Releasing both mouse buttons releases both mapped actions. */
+    memset(&input, 0, sizeof(input));
+    mapper_step_profile(&state, &config, &input, &output, MAP_PROFILE_GOW_RAGNAROK);
+    assert((output.buttons & MAP_BTN_R1) == 0);
+    assert((output.triggers & MAP_TRIGGER_R2) == 0);
+
     puts("mapper tests: PASS");
     return 0;
 }
