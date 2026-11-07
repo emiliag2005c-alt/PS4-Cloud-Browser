@@ -74,7 +74,12 @@ pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png
 	python3 tools/make_gp4.py --out $@ --content-id $(CONTENT_ID) $^
 
 $(CONTENT_ID).pkg: pkg.gp4
-	$(PKGTOOLS)/PkgTool.Core pkg_build $< .
+	@set +e; $(PKGTOOLS)/PkgTool.Core pkg_build $< .; status=$?; set -e; \
+	echo "PkgTool.Core pkg_build exit code: $status"; \
+	find . -maxdepth 1 -type f -name '*.pkg' -printf '%f (%s bytes)\\n' || true; \
+	if [ $status -ne 0 ]; then echo "PKG builder failed; see diagnostics above."; exit $status; fi
+	@test -s "$@"
+	$(PKGTOOLS)/PkgTool.Core pkg_validate "$@"
 
 clean:
 	rm -rf $(INTDIR) eboot.bin pkg.gp4 sce_sys/param.sfo sce_sys/icon0.png *.pkg
