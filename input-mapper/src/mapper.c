@@ -33,10 +33,11 @@ void mapper_reset(MapperState *state)
     state->aim_y = 0.0f;
 }
 
-void mapper_step(MapperState *state,
-                 const MapperConfig *config,
-                 const MapperInput *input,
-                 MapperReport *output)
+void mapper_step_profile(MapperState *state,
+                         const MapperConfig *config,
+                         const MapperInput *input,
+                         MapperReport *output,
+                         enum MapperProfile profile)
 {
     float dx;
     float dy;
@@ -71,7 +72,23 @@ void mapper_step(MapperState *state,
     if (input->keys[MAP_KEY_SHIFT]) output->buttons |= MAP_BTN_L3;
 
     if (input->mouse_middle) output->buttons |= MAP_BTN_R3;
-    if (input->mouse_right) output->triggers |= MAP_TRIGGER_L2;
-    if (input->mouse_left) output->triggers |= MAP_TRIGGER_R2;
+
+    if (profile == MAP_PROFILE_GOW_RAGNAROK) {
+        /* GoW Ragnarök default: left click = light attack (R1),
+           right click = heavy/charged attack (R2). Held input stays active. */
+        if (input->mouse_left) output->buttons |= MAP_BTN_R1;
+        if (input->mouse_right) output->triggers |= MAP_TRIGGER_R2;
+    } else {
+        if (input->mouse_right) output->triggers |= MAP_TRIGGER_L2;
+        if (input->mouse_left) output->triggers |= MAP_TRIGGER_R2;
+    }
 }
 
+
+void mapper_step(MapperState *state,
+                 const MapperConfig *config,
+                 const MapperInput *input,
+                 MapperReport *output)
+{
+    mapper_step_profile(state, config, input, output, MAP_PROFILE_DEFAULT);
+}
