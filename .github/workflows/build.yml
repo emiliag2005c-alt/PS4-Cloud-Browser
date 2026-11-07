@@ -1,0 +1,75 @@
+name: Build PS4 Cloud Browser
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make curl libicu-dev clang lld python3
+
+      - name: Install libssl1.1 required by PkgTool.Core
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://security.ubuntu.com/ubuntu/pool/main/o/openssl/"
+          package="$(curl -fsSL "$base" \
+            | grep -oE 'libssl1\.1_1\.1\.1f-[0-9a-z.~+]+_amd64\.deb' \
+            | sort -Vu | tail -n 1)"
+          if [ -z "$package" ]; then
+            echo "Could not locate the Ubuntu libssl1.1 package."
+            exit 1
+          fi
+          curl -fL "$base$package" -o /tmp/libssl1.1.deb
+          sudo dpkg -i /tmp/libssl1.1.deb
+
+      - name: Download OpenOrbis PS4 Toolchain v0.5.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL \
+            https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5.4/toolchain-llvm-18.tar.gz \
+            -o /tmp/openorbis-toolchain.tar.gz
+          mkdir -p "$RUNNER_TEMP/openorbis"
+          tar -xzf /tmp/openorbis-toolchain.tar.gz -C "$RUNNER_TEMP/openorbis"
+          toolchain_root="$(dirname "$(find "$RUNNER_TEMP/openorbis" -type f -name link.x -print -quit)")"
+          if [ -z "$toolchain_root" ] || [ ! -f "$toolchain_root/link.x" ]; then
+            echo "OpenOrbis toolchain root (link.x) was not found."
+            exit 1
+          fi
+          echo "OO_PS4_TOOLCHAIN=$toolchain_root" >> "$GITHUB_ENV"
+          echo "Using toolchain at $toolchain_root"
+          test -x "$toolchain_root/bin/linux/create-fself"
+          test -f "$toolchain_root/bin/linux/PkgTool.Core"
+
+      - name: Build PKG
+        run: |
+          set -euo pipefail
+          make
+          test -s eboot.bin
+          test -s IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+          file eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+          sha256sum eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS4-Cloud-Browser-0.1
+          path: |
+            IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+            eboot.bin
+            build/ps4_cloud_browser.elf
+          if-no-files-found: error
+          retention-days: 30
