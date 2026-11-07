@@ -6,7 +6,7 @@ Los perfiles son archivos JSON editables desde el futuro PKG. El editor incluye 
 
 - `device`: `keyboard` o `mouse`.
 - `code`: nombre estable de tecla o botón, independiente del layout cuando sea posible.
-- `alternates`: lista opcional de entradas alternativas que activan la misma acción. Ejemplo: Ctrl o botón lateral del mouse para L2.
+- `alternates`: lista opcional de entradas alternativas que activan la misma acción. Solo se usa cuando el usuario configura explícitamente entradas adicionales; no se presupone que el dispositivo tenga botones que no existen.
 - `action`: acción lógica. Puede ser un botón de mando (R1, R2, L1, L2, CROSS, L3, R3, OPTIONS) o una acción semántica del juego como `INTERACT`. La asociación final de acciones semánticas con botones del mando debe poder ajustarse por juego.
 - Movimiento y cámara se configuran independientemente de los botones.
 - L2/R2 son gatillos independientes y deben admitir presión analógica cuando exista una ruta de salida que lo soporte.
