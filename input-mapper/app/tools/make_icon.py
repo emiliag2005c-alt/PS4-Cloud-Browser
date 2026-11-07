@@ -55,34 +55,30 @@ for y in range(SIZE):
     shade = int(14 + 13 * t)
     rect(0, y, SIZE, y + 1, (shade, shade + 8, shade + 24))
 
-# Browser window.
-rounded_rect(70, 105, 442, 407, 30, (8, 17, 34))
-rounded_rect(78, 113, 434, 399, 24, (20, 34, 58))
-rect(80, 151, 432, 158, (36, 57, 86))
-circle(105, 133, 7, (255, 105, 105))
-circle(130, 133, 7, (255, 202, 90))
-circle(155, 133, 7, (82, 220, 151))
-
-# Address bar.
-rounded_rect(185, 122, 405, 144, 10, (12, 23, 42))
-rect(202, 132, 370, 135, (76, 102, 137))
-
-# Stylized globe / web symbol.
-circle(256, 278, 91, (45, 197, 231), 7)
-circle(256, 278, 61, (45, 197, 231), 5)
-line(169, 278, 343, 278, (45, 197, 231), 4)
-line(256, 190, 256, 366, (45, 197, 231), 4)
-# Curved longitude approximations.
-for xoff in (-32, 32):
-    for y in range(215, 342):
-        x = 256 + xoff * math.sqrt(max(0.0, 1 - ((y - 278) / 88) ** 2))
-        put(round(x), y, (45, 197, 231))
-
-# Bright cursor accent.
-circle(344, 333, 18, (235, 248, 255))
-line(338, 326, 365, 353, (8, 17, 34), 5)
-line(350, 340, 359, 363, (8, 17, 34), 4)
-
+# A compact keyboard and mouse mark on a deep blue background.
+rounded_rect(48, 145, 464, 365, 34, (20, 34, 58))
+rounded_rect(66, 165, 446, 345, 22, (8, 17, 34))
+# Keyboard body and keycaps.
+rounded_rect(88, 195, 330, 310, 18, (45, 197, 231))
+for row, count in enumerate((10, 9, 7)):
+    y = 211 + row * 27
+    width = 20 if row == 0 else (22 if row == 1 else 24)
+    gap = 4
+    total = count * width + (count - 1) * gap
+    x0 = 209 - total // 2
+    for col in range(count):
+        rounded_rect(x0 + col * (width + gap), y,
+                     x0 + col * (width + gap) + width, y + 17,
+                     4, (8, 17, 34))
+rounded_rect(145, 293, 274, 302, 4, (8, 17, 34))
+# Mouse body, wheel and center split.
+rounded_rect(342, 188, 420, 315, 36, (235, 248, 255))
+rounded_rect(350, 196, 412, 307, 28, (45, 197, 231))
+line(381, 198, 381, 251, (8, 17, 34), 3)
+rounded_rect(375, 211, 387, 237, 5, (8, 17, 34))
+circle(381, 270, 5, (8, 17, 34))
+# Small status accent.
+circle(421, 119, 13, (82, 220, 151))
 def png_chunk(kind, data):
     payload = kind + data
     return struct.pack(">I", len(data)) + payload + struct.pack(">I", zlib.crc32(payload) & 0xffffffff)
