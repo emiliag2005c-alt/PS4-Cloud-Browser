@@ -22,14 +22,17 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Compile portable mapper core
+      - name: Compile mapper core tests
         run: |
           cc -std=c11 -Wall -Wextra -Werror \
-            -Iinput-mapper/include \
-            input-mapper/src/mapper.c \
-            input-mapper/tests/test_mapper.c \
-            -o /tmp/mapper_test
-      - name: Run mapper unit tests
-        run: /tmp/mapper_test
-      - name: Validate default profile JSON and required bindings
+            -Iinput-mapper/include input-mapper/src/mapper.c \
+            input-mapper/tests/test_mapper.c -o /tmp/mapper_test
+          /tmp/mapper_test
+      - name: Compile profile editor model tests
+        run: |
+          cc -std=c11 -Wall -Wextra -Werror \
+            -Iinput-mapper/include input-mapper/src/profile_model.c \
+            input-mapper/tests/test_profile_model.c -o /tmp/profile_test
+          /tmp/profile_test
+      - name: Validate default profile JSON
         run: python3 input-mapper/tests/test_profile.py
