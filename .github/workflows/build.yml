@@ -60,8 +60,9 @@ jobs:
           make
           test -s eboot.bin
           test -s IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
-          file eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
-          sha256sum eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+          file eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
+          sha256sum eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
+          "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
