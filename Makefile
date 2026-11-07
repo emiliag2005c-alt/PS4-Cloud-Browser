@@ -71,21 +71,19 @@ sce_sys/param.sfo: Makefile
 	$(PKGTOOLS)/PkgTool.Core sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value '$(TITLE_ID)'
 	$(PKGTOOLS)/PkgTool.Core sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value '$(VERSION)'
 
-sce_sys/about/right.prx:
+sce_sys/about/right.sprx:
 	mkdir -p sce_sys/about
-	@right_file="$$(find "$(TOOLCHAIN)/samples" -path '*/sce_sys/about/right.prx' -print -quit)"; \
-	if [ -z "$$right_file" ]; then echo "OpenOrbis right.prx not found"; exit 1; fi; \
-	cp "$$right_file" "$@"
+	cp "$(TOOLCHAIN)/ci_modules/right.sprx" "$@"
 
 sce_module/libc.prx:
 	mkdir -p sce_module
-	cp "$(TOOLCHAIN)/bin/data/modules/libc.prx" "$@"
+	cp "$(TOOLCHAIN)/ci_modules/libc.prx" "$@"
 
 sce_module/libSceFios2.prx:
 	mkdir -p sce_module
-	cp "$(TOOLCHAIN)/bin/data/modules/libSceFios2.prx" "$@"
+	cp "$(TOOLCHAIN)/ci_modules/libSceFios2.prx" "$@"
 
-pkg.gp4: eboot.bin sce_sys/about/right.prx sce_sys/param.sfo sce_sys/icon0.png sce_module/libc.prx sce_module/libSceFios2.prx
+pkg.gp4: eboot.bin sce_sys/about/right.sprx sce_sys/param.sfo sce_sys/icon0.png sce_module/libc.prx sce_module/libSceFios2.prx
 	$(PKGTOOLS)/create-gp4 -out $@ --content-id=$(CONTENT_ID) --files "$^"
 
 $(CONTENT_ID).pkg: pkg.gp4
