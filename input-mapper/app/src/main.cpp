@@ -2,6 +2,7 @@
 #include <orbis/VideoOut.h>
 #include <orbis/Keyboard.h>
 #include <orbis/UserService.h>
+#include "profile_defaults.h"
 
 extern "C" {
 struct OrbisMouseData { uint64_t timestamp; uint8_t connected; uint8_t pad[3]; uint32_t buttons; int32_t x_axis; int32_t y_axis; int32_t wheel; int32_t tilt; uint8_t reserve[8]; };
@@ -28,6 +29,8 @@ int32_t sceMouseRead(int32_t handle, OrbisMouseData *data, int32_t count);
 struct Color { uint8_t r, g, b; };
 
 static FILE *gLog = nullptr;
+static InputProfile gProfile;
+static bool gProfileReady = false;
 static int gKeyboardHandle = -1;
 static bool gKeyboardReady = false;
 static char gSearchText[64] = "";
@@ -309,6 +312,26 @@ static void DrawKeyboardTest(Scene2D &s) {
     Text(s,1530,920,"Y",2,muted); snprintf(number,sizeof(number),"%d",gMouseY); Text(s,1570,920,number,2,cyan);
 }
 
+
+static const ProfileBinding *FindProfileBinding(const char *action) {
+    if (!gProfileReady || !action) return nullptr;
+    for (size_t i = 0; i < gProfile.binding_count; ++i)
+        if (strcmp(gProfile.bindings[i].action, action) == 0)
+            return &gProfile.bindings[i];
+    return nullptr;
+}
+
+static const char *ProfileCode(const char *action) {
+    const ProfileBinding *binding = FindProfileBinding(action);
+    return binding ? binding->primary.code : "UNSET";
+}
+
+static const char *ProfileDeviceName(const char *action) {
+    const ProfileBinding *binding = FindProfileBinding(action);
+    if (!binding) return "UNSET";
+    return binding->primary.device == PROFILE_DEVICE_MOUSE ? "MOUSE" : "KEYBOARD";
+}
+
 static void DrawInterface(Scene2D &s) {
     const Color bg={11,16,29}, panel={20,29,47}, panel2={25,38,59};
     const Color white={235,242,255}, muted={135,155,180};
@@ -326,8 +349,28 @@ static void DrawInterface(Scene2D &s) {
     Text(s,900,345,"ASSIGNMENT",2,muted);
     Text(s,1450,345,"DEVICE",2,muted);
     const char *actions[]={"MOVE","CAMERA","LIGHT ATTACK","HEAVY ATTACK","BLOCK","AIM THROW AXE","DODGE","INTERACT","RUN","LOCK TARGET","MENU"};
-    const char *keys[]={"W A S D","MOUSE MOVE","LEFT CLICK","RIGHT CLICK","Q","CTRL","SPACE","E","SHIFT","MIDDLE CLICK","ESC"};
-    const char *devices[]={"KEYBOARD","MOUSE","MOUSE","MOUSE","KEYBOARD","KEYBOARD","KEYBOARD","KEYBOARD","KEYBOARD","MOUSE","KEYBOARD"};
+    char movement[64];
+    snprintf(movement, sizeof(movement), "%s %s %s %s",
+             ProfileCode("MOVE_UP"), ProfileCode("MOVE_LEFT"),
+             ProfileCode("MOVE_DOWN"), ProfileCode("MOVE_RIGHT"));
+    char camera[64];
+    snprintf(camera, sizeof(camera), "MOUSE %s", ProfileCode("CAMERA"));
+    const char *actionIds[]={"MOVE_UP","CAMERA","R1","R2","L1","L2","CROSS","INTERACT","L3","R3","OPTIONS"};
+    const char *keys[]={
+        movement, camera, nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, nullptr
+    };
+    const char *devices[]={"KEYBOARD","MOUSE",nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr};
+    char values[11][64];
+    for (int i = 2; i < 11; ++i) {
+        const char *code = ProfileCode(actionIds[i]);
+        if (strcmp(code, "LEFT") == 0) code = "LEFT CLICK";
+        else if (strcmp(code, "RIGHT") == 0) code = "RIGHT CLICK";
+        else if (strcmp(code, "MIDDLE") == 0) code = "MIDDLE CLICK";
+        snprintf(values[i], sizeof(values[i]), "%s", code);
+        keys[i] = values[i];
+        devices[i] = ProfileDeviceName(actionIds[i]);
+    }
     for(int i=0;i<11;i++) {
         int y=382+i*47;
         if(i==0) s.Rect(125,y-8,1665,40,panel2);
@@ -353,6 +396,8 @@ int main(void) {
     }
 
     Log("SCENE_INIT_COMPLETE", 0);
+    gProfileReady = input_mapper_init_default_profile(&gProfile);
+    Log("DEFAULT_PROFILE_INITIALIZED", gProfileReady ? (int)gProfile.binding_count : -1);
     DrawInterface(scene);
     if (!scene.Flip(0)) {
         Log("FIRST_FRAME_FAILED", 0);
