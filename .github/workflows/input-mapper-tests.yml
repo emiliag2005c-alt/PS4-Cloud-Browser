@@ -34,5 +34,12 @@ jobs:
             -Iinput-mapper/include input-mapper/src/profile_model.c \
             input-mapper/tests/test_profile_model.c -o /tmp/profile_test
           /tmp/profile_test
+      - name: Test editor default profile initializer
+        run: |
+          cc -std=c11 -Wall -Wextra -Werror \\
+            -Iinput-mapper/include input-mapper/src/profile_model.c \\
+            input-mapper/app/src/profile_defaults.c \\
+            input-mapper/tests/test_profile_defaults.c -o /tmp/profile_defaults_test
+          /tmp/profile_defaults_test
       - name: Validate default profile JSON
         run: python3 input-mapper/tests/test_profile.py
