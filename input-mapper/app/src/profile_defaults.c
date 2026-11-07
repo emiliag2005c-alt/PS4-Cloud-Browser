@@ -7,7 +7,7 @@ static ProfileInput keyboard(const char *code)
     ProfileInput input;
     memset(&input, 0, sizeof(input));
     input.device = PROFILE_DEVICE_KEYBOARD;
-    strncpy(input.code, code, sizeof(input.code) - 1);
+    size_t length = strlen(code);\n    if (length < sizeof(input.code)) memcpy(input.code, code, length + 1);
     return input;
 }
 
