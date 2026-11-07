@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           base="https://security.ubuntu.com/ubuntu/pool/main/o/openssl/"
-          package="$(curl -fsSL "$base" | grep -oE 'libssl1\\.1_1\\.1\\.1f-[0-9a-z.~+]+_amd64\\.deb' | sort -Vu | tail -n 1)"
+          package="$(curl -fsSL "$base" | grep -oE 'libssl1\.1_1\.1\.1f-[0-9a-z.~+]+_amd64\.deb' | sort -Vu | tail -n 1)"
           test -n "$package"
           curl -fL "$base$package" -o /tmp/libssl1.1.deb
           sudo dpkg -i /tmp/libssl1.1.deb
