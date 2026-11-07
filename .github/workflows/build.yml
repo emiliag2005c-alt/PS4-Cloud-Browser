@@ -59,7 +59,7 @@ jobs:
           set -euo pipefail
           make
           test -s eboot.bin
-          test -s IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+          test -s IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
           file eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
           sha256sum eboot.bin IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
 
@@ -68,7 +68,7 @@ jobs:
         with:
           name: PS4-Cloud-Browser-0.1
           path: |
-            IV0000-PSCB00001_00-PS4CLOUDBROWSER.pkg
+            IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
             eboot.bin
             build/ps4_cloud_browser.elf
           if-no-files-found: error
