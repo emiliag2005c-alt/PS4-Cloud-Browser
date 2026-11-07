@@ -47,6 +47,10 @@ jobs:
           fi
           echo "OO_PS4_TOOLCHAIN=$toolchain_root" >> "$GITHUB_ENV"
           echo "Using toolchain at $toolchain_root"
+          # OpenOrbis distributes create-gp4 separately from the main toolchain archive.
+          curl -fL https://github.com/OpenOrbis/create-gp4/releases/latest/download/binaries.tar.gz -o /tmp/create-gp4.tar.gz
+          tar -xzf /tmp/create-gp4.tar.gz -C "$toolchain_root"
+          chmod +x "$toolchain_root/bin/linux/create-gp4"
           test -x "$toolchain_root/bin/linux/create-fself"
           test -x "$toolchain_root/bin/linux/create-gp4"
           test -f "$toolchain_root/bin/linux/PkgTool.Core"
