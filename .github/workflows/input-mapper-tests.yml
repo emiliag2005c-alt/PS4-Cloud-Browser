@@ -2,7 +2,13 @@ name: Input Mapper Core Tests
 
 on:
   push:
-    branches: [input-mapper/prototype-0.1]
+    branches:
+      - input-mapper/configurable-pkg
+      - input-mapper/prototype-0.1
+    paths:
+      - "input-mapper/**"
+      - ".github/workflows/input-mapper-tests.yml"
+  pull_request:
     paths:
       - "input-mapper/**"
       - ".github/workflows/input-mapper-tests.yml"
@@ -23,5 +29,7 @@ jobs:
             input-mapper/src/mapper.c \
             input-mapper/tests/test_mapper.c \
             -o /tmp/mapper_test
-      - name: Run unit tests
+      - name: Run mapper unit tests
         run: /tmp/mapper_test
+      - name: Validate default profile JSON and required bindings
+        run: python3 input-mapper/tests/test_profile.py
