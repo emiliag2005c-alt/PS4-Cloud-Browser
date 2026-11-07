@@ -289,7 +289,7 @@ static void DrawKeyboardTest(Scene2D &s) {
     s.Rect(180,835,940,62,panel2); Text(s,200,852,gSearchText,2,white);
     Text(s,1260,795,"LAST KEY CODE",2,muted);
     snprintf(number,sizeof(number),"%d",gLastKey); Text(s,1260,850,number,3,cyan);
-    Text(s,180,920,gMouseReady ? (gMouseConnected ? "MOUSE CONNECTED" : "MOUSE NOT CONNECTED") : "MOUSE API INIT FAILED",2,gMouseConnected ? green : orange);
+    Text(s,180,920,"MOUSE TEST PAUSED - API NOT VERIFIED",2,gMouseConnected ? green : orange);
     Text(s,850,920,"LEFT",2,muted);
     snprintf(number,sizeof(number),"%d",gMouseLeftCount); Text(s,960,920,number,2,white);
     Text(s,1080,920,"RIGHT",2,muted);
@@ -307,7 +307,7 @@ static void DrawInterface(Scene2D &s) {
     s.Rect(0,0,SCREEN_W,12,cyan);
     s.Rect(100,92,8,64,cyan);
     Text(s,132,108,"PS4 CLOUD BROWSER",3,white);
-    Text(s,1450,116,"BUILD 04",2,cyan);
+    Text(s,1450,116,"BUILD 05",2,cyan);
     Text(s,140,330,"PS4 CLOUD BROWSER",8,white);
     s.Rect(145,420,850,8,cyan);
     Text(s,150,475,"DIAGNOSTICO DE VIDEO",3,muted);
@@ -316,13 +316,13 @@ static void DrawInterface(Scene2D &s) {
     s.Rect(940,640,840,150,panel2); s.Rect(940,640,840,7,orange);
     Text(s,985,685,"MOTOR WEB EN DESARROLLO",3,orange); Text(s,985,745,"GEFORCE NOW NO CONECTADO",2,white);
     DrawKeyboardTest(s); s.Rect(140,970,1640,2,panel2);
-    Text(s,145,990,"VERSION 05 - PRUEBA DE ENTRADAS",2,muted);
+    Text(s,145,990,"VERSION 05.1 - SAFE INPUT STARTUP",2,muted);
     Text(s,1510,970,"OPENORBIS",2,cyan);
 }
 
 int main(void) {
     gLog = fopen("/data/PS4CloudBrowser.log", "w");
-    Log("APP_START", 4);
+    Log("APP_START", 5);
 
     Scene2D scene(SCREEN_W, SCREEN_H);
     if (!scene.Init()) {
@@ -332,19 +332,6 @@ int main(void) {
     }
 
     Log("SCENE_INIT_COMPLETE", 0);
-    int userId = -1;
-    int userRc = sceUserServiceInitialize(nullptr); Log("USER_SERVICE_INIT", userRc);
-    userRc = sceUserServiceGetInitialUser(&userId); Log("INITIAL_USER", userRc);
-    int keyboardRc = sceKeyboardInit(); Log("KEYBOARD_INIT", keyboardRc);
-    if (keyboardRc >= 0 && userRc >= 0) {
-        gKeyboardHandle = sceKeyboardOpen(userId, 0, 0, nullptr);
-        Log("KEYBOARD_OPEN", gKeyboardHandle); gKeyboardReady = gKeyboardHandle >= 0;
-    }
-    int mouseRc = sceMouseInit(); Log("MOUSE_INIT", mouseRc);
-    if (mouseRc >= 0 && userRc >= 0) {
-        gMouseHandle = sceMouseOpen(userId, 0, 0, nullptr);
-        Log("MOUSE_OPEN", gMouseHandle); gMouseReady = gMouseHandle >= 0;
-    }
     DrawInterface(scene);
     if (!scene.Flip(0)) {
         Log("FIRST_FRAME_FAILED", 0);
@@ -359,6 +346,24 @@ int main(void) {
         if (gLog) fclose(gLog);
         for (;;) sceKernelUsleep(1000000);
     }
+
+    // Input startup is deliberately delayed until after the first two confirmed frames.
+    // Mouse API is disabled in this safety build until its ABI is verified.
+    int userId = -1;
+    int userRc = sceUserServiceInitialize(nullptr); Log("USER_SERVICE_INIT", userRc);
+    userRc = sceUserServiceGetInitialUser(&userId); Log("INITIAL_USER", userRc);
+    int keyboardRc = sceKeyboardInit(); Log("KEYBOARD_INIT", keyboardRc);
+    if (keyboardRc >= 0 && userRc >= 0) {
+        gKeyboardHandle = sceKeyboardOpen(userId, 0, 0, nullptr);
+        Log("KEYBOARD_OPEN", gKeyboardHandle); gKeyboardReady = gKeyboardHandle >= 0;
+    }
+    int mouseRc = sceMouseInit(); Log("MOUSE_INIT", mouseRc);
+    if (mouseRc >= 0 && userRc >= 0) {
+        gMouseHandle = sceMouseOpen(userId, 0, 0, nullptr);
+        Log("MOUSE_OPEN", gMouseHandle); gMouseReady = gMouseHandle >= 0;
+    }
+
+    Log("MOUSE_DISABLED_UNTIL_ABI_VERIFIED", 0);
 
     Log("GRAPHICS_TEST_PASSED", 0);
     int frameId = 2;
