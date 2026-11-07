@@ -357,12 +357,6 @@ int main(void) {
         gKeyboardHandle = sceKeyboardOpen(userId, 0, 0, nullptr);
         Log("KEYBOARD_OPEN", gKeyboardHandle); gKeyboardReady = gKeyboardHandle >= 0;
     }
-    int mouseRc = sceMouseInit(); Log("MOUSE_INIT", mouseRc);
-    if (mouseRc >= 0 && userRc >= 0) {
-        gMouseHandle = sceMouseOpen(userId, 0, 0, nullptr);
-        Log("MOUSE_OPEN", gMouseHandle); gMouseReady = gMouseHandle >= 0;
-    }
-
     Log("MOUSE_DISABLED_UNTIL_ABI_VERIFIED", 0);
 
     Log("GRAPHICS_TEST_PASSED", 0);
