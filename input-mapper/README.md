@@ -1,4 +1,4 @@
-# PS4 Universal Input Mapper — Prototype 0.1
+# PS4 Universal Input Mapper — Prototype 0.2
 
 Experimental input-translation core for PS4 homebrew.
 
@@ -8,6 +8,7 @@ Experimental input-translation core for PS4 homebrew.
 - WASD controls the left stick.
 - Mouse movement controls a decaying right-stick aim value.
 - Mouse buttons and keyboard keys map to logical controller buttons/triggers.
+- Includes a selectable **God of War Ragnarök** profile: left click = R1 (light attack), right click = R2 (heavy/charged attack).
 - Includes a host-side unit test that can be compiled with a normal C compiler.
 
 ## What it does not do yet
@@ -53,3 +54,8 @@ The mapping is a starting default, not a claim that every game's controls are id
 ## Safety / stability rule
 
 The mapper core stays separate from the existing Cloud Browser build and source tree. No kernel patching, syscall patching, or undocumented ABI calls are added to the browser app as part of this prototype.
+
+
+## God of War Ragnarök profile
+
+Call `mapper_step_profile(..., MAP_PROFILE_GOW_RAGNAROK)` to select this profile. The left mouse button holds logical R1; the right mouse button holds logical R2. Releasing the mouse button releases the corresponding logical action. This profile is only a mapping inside the portable core: it still does not read a physical mouse or inject controller input into a running PS4 game.
