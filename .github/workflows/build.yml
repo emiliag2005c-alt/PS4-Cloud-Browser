@@ -50,37 +50,37 @@ jobs:
           echo "OO_PS4_TOOLCHAIN=$toolchain_root" >> "$GITHUB_ENV"
           echo "Using toolchain at $toolchain_root"
 
-          # The official OpenOrbis workflow extracts create-gp4 into the toolchain root.
           curl -fL https://github.com/OpenOrbis/create-gp4/releases/latest/download/binaries.tar.gz -o /tmp/create-gp4.tar.gz
           mkdir -p /tmp/create-gp4
           tar -xzf /tmp/create-gp4.tar.gz -C /tmp/create-gp4
+          install -m 0755 /tmp/create-gp4/bin/linux/create-gp4 "$toolchain_root/bin/linux/create-gp4"
 
-          echo "---- create-gp4 archive contents ----"
-          find /tmp/create-gp4 -maxdepth 5 -type f -printf '%P\n' | head -100
-          echo "---- toolchain expected tools ----"
-          find "$toolchain_root/bin" -maxdepth 4 -type f \( -name 'create-fself' -o -name 'create-gp4' -o -name 'PkgTool.Core' -o -name 'libc.prx' -o -name 'libSceFios2.prx' \) -printf '%P\n' | sort
-
-          gp4_file="$(find /tmp/create-gp4 -type f -name 'create-gp4' -print -quit)"
-          if [ -z "$gp4_file" ]; then
-            echo "create-gp4 executable was not found in the downloaded archive."
-            exit 1
-          fi
-          mkdir -p "$toolchain_root/bin/linux"
-          install -m 0755 "$gp4_file" "$toolchain_root/bin/linux/create-gp4"
+          # The release toolchain archive omits the generated PRX modules.
+          curl -fL https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/archive/refs/tags/v0.5.4.tar.gz -o /tmp/openorbis-source.tar.gz
+          mkdir -p /tmp/openorbis-source
+          tar -xzf /tmp/openorbis-source.tar.gz -C /tmp/openorbis-source --strip-components=1
+          modules="$RUNNER_TEMP/openorbis-source/src/modules"
+          export OO_PS4_TOOLCHAIN="$toolchain_root"
+          make -C "$modules/libc"
+          make -C "$modules/libSceFios2"
+          make -C "$modules/right"
+          mkdir -p "$toolchain_root/ci_modules"
+          cp "$modules/libc/libc.prx" "$toolchain_root/ci_modules/libc.prx"
+          cp "$modules/libSceFios2/libSceFios2.prx" "$toolchain_root/ci_modules/libSceFios2.prx"
+          cp "$modules/right/right.sprx" "$toolchain_root/ci_modules/right.sprx"
 
           for required in \
             "$toolchain_root/bin/linux/create-fself" \
             "$toolchain_root/bin/linux/create-gp4" \
             "$toolchain_root/bin/linux/PkgTool.Core" \
-            "$toolchain_root/bin/data/modules/libc.prx" \
-            "$toolchain_root/bin/data/modules/libSceFios2.prx"; do
-            if [ ! -f "$required" ]; then
-              echo "Missing required file: $required"
+            "$toolchain_root/ci_modules/libc.prx" \
+            "$toolchain_root/ci_modules/libSceFios2.prx" \
+            "$toolchain_root/ci_modules/right.sprx"; do
+            if [ ! -s "$required" ]; then
+              echo "Missing required build output: $required"
               exit 1
             fi
           done
-          test -x "$toolchain_root/bin/linux/create-fself"
-          test -x "$toolchain_root/bin/linux/create-gp4"
 
       - name: Build PKG
         run: |
