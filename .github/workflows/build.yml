@@ -40,22 +40,47 @@ jobs:
           curl -fL https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5.4/toolchain-llvm-18.tar.gz -o /tmp/openorbis-toolchain.tar.gz
           mkdir -p "$RUNNER_TEMP/openorbis"
           tar -xzf /tmp/openorbis-toolchain.tar.gz -C "$RUNNER_TEMP/openorbis"
-          toolchain_root="$(dirname "$(find "$RUNNER_TEMP/openorbis" -type f -name link.x -print -quit)")"
-          if [ -z "$toolchain_root" ] || [ ! -f "$toolchain_root/link.x" ]; then
+          link_file="$(find "$RUNNER_TEMP/openorbis" -type f -name link.x -print -quit)"
+          if [ -z "$link_file" ]; then
             echo "OpenOrbis toolchain root (link.x) was not found."
+            find "$RUNNER_TEMP/openorbis" -maxdepth 4 -type f | head -100
             exit 1
           fi
+          toolchain_root="$(dirname "$link_file")"
           echo "OO_PS4_TOOLCHAIN=$toolchain_root" >> "$GITHUB_ENV"
           echo "Using toolchain at $toolchain_root"
-          # OpenOrbis distributes create-gp4 separately from the main toolchain archive.
+
+          # The official OpenOrbis workflow extracts create-gp4 into the toolchain root.
           curl -fL https://github.com/OpenOrbis/create-gp4/releases/latest/download/binaries.tar.gz -o /tmp/create-gp4.tar.gz
-          tar -xzf /tmp/create-gp4.tar.gz -C "$toolchain_root"
-          chmod +x "$toolchain_root/bin/linux/create-gp4"
+          mkdir -p /tmp/create-gp4
+          tar -xzf /tmp/create-gp4.tar.gz -C /tmp/create-gp4
+
+          echo "---- create-gp4 archive contents ----"
+          find /tmp/create-gp4 -maxdepth 5 -type f -printf '%P\n' | head -100
+          echo "---- toolchain expected tools ----"
+          find "$toolchain_root/bin" -maxdepth 4 -type f \( -name 'create-fself' -o -name 'create-gp4' -o -name 'PkgTool.Core' -o -name 'libc.prx' -o -name 'libSceFios2.prx' \) -printf '%P\n' | sort
+
+          gp4_file="$(find /tmp/create-gp4 -type f -name 'create-gp4' -print -quit)"
+          if [ -z "$gp4_file" ]; then
+            echo "create-gp4 executable was not found in the downloaded archive."
+            exit 1
+          fi
+          mkdir -p "$toolchain_root/bin/linux"
+          install -m 0755 "$gp4_file" "$toolchain_root/bin/linux/create-gp4"
+
+          for required in \
+            "$toolchain_root/bin/linux/create-fself" \
+            "$toolchain_root/bin/linux/create-gp4" \
+            "$toolchain_root/bin/linux/PkgTool.Core" \
+            "$toolchain_root/bin/data/modules/libc.prx" \
+            "$toolchain_root/bin/data/modules/libSceFios2.prx"; do
+            if [ ! -f "$required" ]; then
+              echo "Missing required file: $required"
+              exit 1
+            fi
+          done
           test -x "$toolchain_root/bin/linux/create-fself"
           test -x "$toolchain_root/bin/linux/create-gp4"
-          test -f "$toolchain_root/bin/linux/PkgTool.Core"
-          test -f "$toolchain_root/bin/data/modules/libc.prx"
-          test -f "$toolchain_root/bin/data/modules/libSceFios2.prx"
 
       - name: Build PKG
         run: |
