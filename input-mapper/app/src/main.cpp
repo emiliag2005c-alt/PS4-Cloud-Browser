@@ -380,7 +380,7 @@ static void DrawInterface(Scene2D &s) {
         s.Rect(140,y+31,1620,1,{38,52,73});
     }
     s.Rect(105,955,1710,75,panel2);
-    Text(s,140,980,"PROFILE MODEL CONNECTED IN NEXT BUILD",2,orange);
+    Text(s,140,980,"PROFILE MODEL ACTIVE - EDITING NEXT",2,orange);
     Text(s,1110,980,"INPUT CAPTURE NOT ENABLED",2,orange);
     Text(s,140,1050,"STANDALONE APP SHELL - NO INPUT INJECTION",1,muted);
 }
