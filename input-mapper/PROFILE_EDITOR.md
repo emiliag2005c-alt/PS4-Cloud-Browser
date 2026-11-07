@@ -19,7 +19,7 @@ Una aplicación PS4 independiente, instalable como PKG, para crear y administrar
 | Ataque ligero (R1) | Clic izquierdo |
 | Ataque pesado (R2) | Clic derecho |
 | Bloquear con escudo (L1) | Q |
-| Apuntar / lanzar hacha (L2) | Ctrl o botón lateral del mouse |
+| Apuntar / lanzar hacha (L2) | Ctrl |
 | Esquivar (X / Cross) | Espacio |
 | Interactuar | E |
 | Correr (L3) | Shift |
