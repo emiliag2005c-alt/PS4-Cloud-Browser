@@ -1,0 +1,27 @@
+name: Input Mapper Core Tests
+
+on:
+  push:
+    branches: [input-mapper/prototype-0.1]
+    paths:
+      - "input-mapper/**"
+      - ".github/workflows/input-mapper-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile portable mapper core
+        run: |
+          cc -std=c11 -Wall -Wextra -Werror \
+            -Iinput-mapper/include \
+            input-mapper/src/mapper.c \
+            input-mapper/tests/test_mapper.c \
+            -o /tmp/mapper_test
+      - name: Run unit tests
+        run: /tmp/mapper_test
