@@ -94,7 +94,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PS4-Cloud-Browser-0.4
+          name: PS4-Cloud-Browser-0.5
           path: |
             IV0000-PSCB00001_00-PS4CLOUDBROWSER0.pkg
             eboot.bin
