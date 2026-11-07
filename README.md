@@ -8,7 +8,7 @@ Version 0.2 was confirmed to launch and remain running on the target PS4. Versio
 
 Version 0.4 was tested on the target console and successfully displayed the diagnostic interface with VideoOut active.
 
-Version 0.5 adds an experimental keyboard test panel: initialization through the OpenOrbis keyboard/user-service interfaces, a text-entry field, a key-event counter, and the last HID key code. Mouse input is not yet implemented: the OpenOrbis Mouse header currently exposes no usable function signatures, so left/right-click reporting remains pending API research. The application still has no web engine or GeForce NOW support.
+Version 0.5 adds an experimental keyboard test panel: initialization through the OpenOrbis keyboard/user-service interfaces, a text-entry field, a key-event counter, and the last HID key code. Mouse input is also prototyped through the recovered `sceMouseInit`, `sceMouseOpen`, and `sceMouseRead` signatures. The test panel reports connection state, relative movement, and left/right click counts. Both input paths remain experimental until compiled and tested on the console. The application still has no web engine or GeForce NOW support.
 
 ## Build
 
@@ -22,7 +22,7 @@ The workflow downloads OpenOrbis PS4 Toolchain v0.5.4, compiles the application,
 - [x] 0.2 — Confirm that the application launches and remains running on the target PS4.
 - [x] 0.3 — Build the first native graphical interface (console test showed a black screen).
 - [x] 0.4 — Diagnose VideoOut/framebuffer initialization on the target console.
-- [ ] 0.5 — Prototype keyboard input and a text-entry test field; investigate mouse input.
+- [ ] 0.5 — Prototype keyboard input and a text-entry test field; prototype mouse movement and left/right click reporting.
 - [ ] 0.6 — Research and prototype a feasible web-rendering engine.
 - [ ] 0.7 — Investigate GeForce NOW compatibility, including networking, video decoding, and input latency.
 
