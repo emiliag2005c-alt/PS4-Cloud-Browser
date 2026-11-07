@@ -16,7 +16,7 @@ CC          := clang
 CXX         := clang++
 LD          := ld.lld
 
-CORE_LIBS   := -lc -lkernel -lc++ -lSceLibcInternal -lSceFios2
+CORE_LIBS   := -lc -lkernel -lc++ -lSceLibcInternal -lSceFios2 -lSceVideoOut
 ALL_STUBS   := $(sort $(patsubst $(TOOLCHAIN)/lib/lib%.so,-l%,$(wildcard $(TOOLCHAIN)/lib/lib*.so)) \
                       $(patsubst $(TOOLCHAIN)/lib/lib%.a,-l%,$(wildcard $(TOOLCHAIN)/lib/lib*.a)))
 EXTRA_LIBS  := $(filter-out $(CORE_LIBS),$(ALL_STUBS))
