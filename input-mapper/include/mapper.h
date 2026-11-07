@@ -22,6 +22,11 @@ enum MapperButton {
     MAP_BTN_SHARE    = 1u << 9
 };
 
+enum MapperProfile {
+    MAP_PROFILE_DEFAULT = 0,
+    MAP_PROFILE_GOW_RAGNAROK = 1
+};
+
 enum MapperTrigger {
     MAP_TRIGGER_L2 = 1u << 0,
     MAP_TRIGGER_R2 = 1u << 1
@@ -69,6 +74,11 @@ typedef struct MapperState {
 
 void mapper_default_config(MapperConfig *config);
 void mapper_reset(MapperState *state);
+void mapper_step_profile(MapperState *state,
+                         const MapperConfig *config,
+                         const MapperInput *input,
+                         MapperReport *output,
+                         enum MapperProfile profile);
 void mapper_step(MapperState *state,
                  const MapperConfig *config,
                  const MapperInput *input,
