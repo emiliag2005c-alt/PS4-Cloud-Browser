@@ -4,7 +4,7 @@ This directory contains an isolated OpenOrbis application target. It does not al
 
 ## Current state
 
-The first app shell reuses the repository's existing VideoOut framebuffer renderer and presents the intended PC-default bindings. It is a **renderer/package scaffold**, not yet an interactive editor.
+The app shell reuses the repository's existing VideoOut framebuffer renderer. Its PC-default assignments are now initialized through the shared C profile model and the rows read from that model. It is still a **non-interactive renderer/package scaffold**, not yet a usable editor.
 
 Not implemented or verified yet:
 - keyboard/gamepad navigation inside this app;
