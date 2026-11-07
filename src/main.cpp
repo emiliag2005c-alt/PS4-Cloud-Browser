@@ -2,6 +2,13 @@
 #include <orbis/VideoOut.h>
 #include <orbis/Keyboard.h>
 #include <orbis/UserService.h>
+
+extern "C" {
+struct OrbisMouseData { uint64_t timestamp; uint8_t connected; uint8_t pad[3]; uint32_t buttons; int32_t x_axis; int32_t y_axis; int32_t wheel; int32_t tilt; uint8_t reserve[8]; };
+int32_t sceMouseInit(void);
+int32_t sceMouseOpen(int32_t userId, int32_t type, int32_t index, const void *param);
+int32_t sceMouseRead(int32_t handle, OrbisMouseData *data, int32_t count);
+}
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -26,6 +33,14 @@ static bool gKeyboardReady = false;
 static char gSearchText[64] = "";
 static int gKeyCount = 0;
 static int gLastKey = 0;
+static int gMouseHandle = -1;
+static bool gMouseReady = false;
+static bool gMouseConnected = false;
+static uint32_t gMouseButtons = 0;
+static uint32_t gPreviousMouseButtons = 0;
+static int gMouseLeftCount = 0;
+static int gMouseRightCount = 0;
+static int gMouseX = 0, gMouseY = 0;
 
 static void Log(const char *message, int value = 0) {
     if (gLog) {
@@ -195,6 +210,20 @@ static char KeyToChar(int key) {
     if (key == 44) return ' ';
     return 0;
 }
+static void PollMouse() {
+    if (!gMouseReady || gMouseHandle < 0) return;
+    OrbisMouseData data;
+    memset(&data, 0, sizeof(data));
+    int rc = sceMouseRead(gMouseHandle, &data, 1);
+    if (rc < 1) return;
+    gMouseConnected = data.connected != 0;
+    gMouseButtons = data.buttons;
+    gMouseX += data.x_axis;
+    gMouseY += data.y_axis;
+    if ((gMouseButtons & 1u) && !(gPreviousMouseButtons & 1u)) ++gMouseLeftCount;
+    if ((gMouseButtons & 2u) && !(gPreviousMouseButtons & 2u)) ++gMouseRightCount;
+    gPreviousMouseButtons = gMouseButtons;
+}
 static void PollKeyboard() {
     if (!gKeyboardReady || gKeyboardHandle < 0) return;
     OrbisKeyboardData data;
@@ -225,7 +254,13 @@ static void DrawKeyboardTest(Scene2D &s) {
     s.Rect(180,835,940,62,panel2); Text(s,200,852,gSearchText,2,white);
     Text(s,1260,795,"LAST KEY CODE",2,muted);
     snprintf(number,sizeof(number),"%d",gLastKey); Text(s,1260,850,number,3,cyan);
-    Text(s,180,920,"MOUSE LEFT RIGHT CLICK TEST PENDING API RESEARCH",2,orange);
+    Text(s,180,920,gMouseReady ? (gMouseConnected ? "MOUSE CONNECTED" : "MOUSE NOT CONNECTED") : "MOUSE API INIT FAILED",2,gMouseConnected ? green : orange);
+    Text(s,850,920,"LEFT",2,muted);
+    snprintf(number,sizeof(number),"%d",gMouseLeftCount); Text(s,960,920,number,2,white);
+    Text(s,1080,920,"RIGHT",2,muted);
+    snprintf(number,sizeof(number),"%d",gMouseRightCount); Text(s,1210,920,number,2,white);
+    Text(s,1330,920,"X",2,muted); snprintf(number,sizeof(number),"%d",gMouseX); Text(s,1370,920,number,2,cyan);
+    Text(s,1530,920,"Y",2,muted); snprintf(number,sizeof(number),"%d",gMouseY); Text(s,1570,920,number,2,cyan);
 }
 
 static void DrawInterface(Scene2D &s) {
@@ -270,6 +305,11 @@ int main(void) {
         gKeyboardHandle = sceKeyboardOpen(userId, 0, 0, nullptr);
         Log("KEYBOARD_OPEN", gKeyboardHandle); gKeyboardReady = gKeyboardHandle >= 0;
     }
+    int mouseRc = sceMouseInit(); Log("MOUSE_INIT", mouseRc);
+    if (mouseRc >= 0 && userRc >= 0) {
+        gMouseHandle = sceMouseOpen(userId, 0, 0, nullptr);
+        Log("MOUSE_OPEN", gMouseHandle); gMouseReady = gMouseHandle >= 0;
+    }
     DrawInterface(scene);
     if (!scene.Flip(0)) {
         Log("FIRST_FRAME_FAILED", 0);
@@ -288,7 +328,7 @@ int main(void) {
     Log("GRAPHICS_TEST_PASSED", 0);
     int frameId = 2;
     for (;;) {
-        PollKeyboard(); scene.Swap(); DrawInterface(scene);
+        PollKeyboard(); PollMouse(); scene.Swap(); DrawInterface(scene);
         if (!scene.Flip(frameId++)) sceKernelUsleep(100000);
         sceKernelUsleep(16000);
     }
