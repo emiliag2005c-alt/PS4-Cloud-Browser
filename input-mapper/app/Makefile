@@ -25,11 +25,12 @@ CFILES      := $(wildcard $(SRCDIR)/*.c)
 CPPFILES    := $(wildcard $(SRCDIR)/*.cpp)
 SFILES      := $(wildcard $(SRCDIR)/*.s)
 OBJS        := $(patsubst $(SRCDIR)/%.c,$(INTDIR)/%.o,$(CFILES)) \
+               $(INTDIR)/profile_model.o \
                $(patsubst $(SRCDIR)/%.cpp,$(INTDIR)/%.o,$(CPPFILES)) \
                $(patsubst $(SRCDIR)/%.s,$(INTDIR)/%.o,$(SFILES))
 
 CFLAGS      := --target=x86_64-pc-freebsd12-elf -fPIC -funwind-tables -c \
-               -isysroot $(TOOLCHAIN) -isystem $(TOOLCHAIN)/include
+               -isysroot $(TOOLCHAIN) -isystem $(TOOLCHAIN)/include -I../include
 CXXFLAGS    := $(CFLAGS) -isystem $(TOOLCHAIN)/include/c++/v1
 LDFLAGS     := -m elf_x86_64 -pie --script $(TOOLCHAIN)/link.x --eh-frame-hdr \
                -L$(TOOLCHAIN)/lib $(CORE_LIBS) --as-needed $(EXTRA_LIBS) --no-as-needed \
@@ -47,6 +48,9 @@ $(INTDIR)/%.o: $(SRCDIR)/%.cpp | $(INTDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 
 $(INTDIR)/%.o: $(SRCDIR)/%.s | $(INTDIR)
+	$(CC) $(CFLAGS) -o $@ $<
+
+$(INTDIR)/profile_model.o: ../src/profile_model.c | $(INTDIR)
 	$(CC) $(CFLAGS) -o $@ $<
 
 eboot.bin: $(OBJS)
