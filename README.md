@@ -1,21 +1,33 @@
 # PS4 Cloud Browser
 
-An experimental homebrew browser project for PlayStation 4 (CUH-1215A with GoldHEN).
+Experimental homebrew application for PlayStation 4, initially targeting a CUH-1215A running GoldHEN.
 
-## Goal
-Build and validate a minimal, original PS4 application first, then investigate practical browser-engine options. GeForce NOW support is an experimental long-term target, not a guaranteed feature.
+## Current version: 0.1 boot-test
 
-## Roadmap
-- [ ] 0.1 — Establish a reproducible build and produce a test PKG.
-- [ ] 0.2 — Add a native interface and controller / keyboard / mouse input.
-- [ ] 0.3 — Evaluate a feasible web-rendering engine for PS4.
-- [ ] 0.4 — Investigate GeForce NOW compatibility and its video / input requirements.
-
-## Important limitations
-A successful PKG build does not prove that the application can launch on every PS4 firmware. Modern websites and cloud-gaming services may require browser features, codecs, memory, and DRM support that a homebrew app may not provide.
+The first milestone is a minimal native PS4 application and a repeatable GitHub Actions build. The current program is deliberately a boot-test stub: it starts and sleeps in a loop. It does **not** display a browser interface, render web pages, or connect to GeForce NOW yet.
 
 ## Build
-The project is intended to use GitHub Actions and the OpenOrbis PS4 toolchain. Build instructions will be added once the initial workflow is validated.
 
-## Safety
-Do not install experimental PKG files until their build artifacts and contents have been reviewed.
+Every push to `main`, or a manual run from the Actions tab, starts the **Build PS4 Cloud Browser** workflow.
+
+The workflow:
+1. Downloads the OpenOrbis PS4 Toolchain v0.5.4.
+2. Compiles the application for the PS4 target.
+3. Creates the fake SELF `eboot.bin`.
+4. Generates the application icon and SFO metadata.
+5. Packages the files into a PS4 `.pkg`.
+6. Uploads the PKG and intermediate ELF as workflow artifacts.
+
+## Roadmap
+
+- [x] Create the repository and initial build structure.
+- [ ] 0.1 — Validate the toolchain, build workflow, and PKG output.
+- [ ] 0.2 — Add a visible native interface and controller / keyboard / mouse input.
+- [ ] 0.3 — Research and prototype a feasible web-rendering engine.
+- [ ] 0.4 — Investigate GeForce NOW compatibility, including networking, video decoding, and input latency.
+
+## Important limitations
+
+A successful build only proves that the toolchain produced a package. It does not prove that the package launches on every firmware or that it is compatible with a particular PS4. Modern websites and cloud-gaming services may require browser APIs, codecs, memory, and DRM support that a homebrew application may not provide.
+
+Do not install an experimental PKG until its build has succeeded and the artifact has been reviewed.
