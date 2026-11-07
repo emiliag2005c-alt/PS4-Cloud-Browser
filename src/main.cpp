@@ -134,12 +134,23 @@ public:
     }
 
     void Rect(int x, int y, int w, int h, Color c) {
-        if (w <= 0 || h <= 0) return;
-        int x0 = x < 0 ? 0 : x, y0 = y < 0 ? 0 : y;
+        if (w <= 0 || h <= 0 || !buffers[active]) return;
+        int x0 = x < 0 ? 0 : x;
+        int y0 = y < 0 ? 0 : y;
         int x1 = x + w > width ? width : x + w;
         int y1 = y + h > height ? height : y + h;
-        for (int py = y0; py < y1; ++py)
-            for (int px = x0; px < x1; ++px) Pixel(px, py, c);
+        if (x0 >= x1 || y0 >= y1) return;
+
+        // Fast software rasterization: clip once, then write contiguous pixels.
+        const uint32_t value = 0x80000000u | ((uint32_t)c.r << 16) |
+                               ((uint32_t)c.g << 8) | (uint32_t)c.b;
+        uint32_t *base = reinterpret_cast<uint32_t *>(buffers[active]);
+        const size_t rowWidth = (size_t)width;
+        const size_t span = (size_t)(x1 - x0);
+        for (int py = y0; py < y1; ++py) {
+            uint32_t *row = base + (size_t)py * rowWidth + (size_t)x0;
+            for (size_t px = 0; px < span; ++px) row[px] = value;
+        }
     }
 
     bool Flip(int id) {
@@ -316,13 +327,13 @@ static void DrawInterface(Scene2D &s) {
     s.Rect(940,640,840,150,panel2); s.Rect(940,640,840,7,orange);
     Text(s,985,685,"MOTOR WEB EN DESARROLLO",3,orange); Text(s,985,745,"GEFORCE NOW NO CONECTADO",2,white);
     DrawKeyboardTest(s); s.Rect(140,970,1640,2,panel2);
-    Text(s,145,990,"VERSION 05.1 - SAFE INPUT STARTUP",2,muted);
+    Text(s,145,990,"VERSION 05.3 - FAST RENDER / INPUT OFF",2,muted);
     Text(s,1510,970,"OPENORBIS",2,cyan);
 }
 
 int main(void) {
     gLog = fopen("/data/PS4CloudBrowser.log", "w");
-    Log("APP_START", 6);
+    Log("APP_START", 7);
 
     Scene2D scene(SCREEN_W, SCREEN_H);
     if (!scene.Init()) {
